@@ -7,52 +7,54 @@
 double getInput(const char *prompt);
 bool isScientificNotation(const char *input);
 void Show(float **aValues, const float *bValues, int rows, int columns);
+int checkConvergence(float **aValues, int rows, int columns);
 int main()
 {
     float **a;
     float *b;
     int n;
-
-    // Get the number of strings
-    n = getInput("Enter the number of equations: ");
-
-    // Allocate memory for b
-    b = (float *)malloc(n * sizeof(float));
-
-    // Allocate memory for a
-    a = (float **)calloc(n, sizeof(float *));
-    if (a == NULL || b == NULL)
+    while (1)
     {
-        printf("Memory allocation failed\n");
-        return 1; // Exiting with an error code
-    }
-
-    // Get values for a and b
-    for (int i = 0; i < n; i++)
-    {
-        // Allocate memory for a[i]
-        a[i] = (float *)malloc(n * sizeof(float));
-        if (a[i] == NULL)
+        n = getInput("Enter the number of equations: ");
+        b = (float *)malloc(n * sizeof(float));
+        a = (float **)calloc(n, sizeof(float *));
+        if (a == NULL || b == NULL)
         {
             printf("Memory allocation failed\n");
-            return 1; // Exiting with an error code
+            return 1;
         }
 
-        // Get values for a[i]
-        for (int j = 0; j < n; j++)
+        // Get values for a and b
+        for (int i = 0; i < n; i++)
         {
-            printf("Enter value for the a%d%d: ", i + 1, j + 1);
-            a[i][j] = getInput("");
+            a[i] = (float *)malloc(n * sizeof(float));
+            if (a[i] == NULL)
+            {
+                printf("Memory allocation failed\n");
+                return 1;
+            }
+
+            // Get values for a[i]
+            for (int j = 0; j < n; j++)
+            {
+                printf("Enter value for the a%d%d: ", i + 1, j + 1);
+                a[i][j] = getInput("");
+            }
+
+            // Get value for b[i]
+            printf("Enter value for the b%d: ", i + 1);
+            b[i] = getInput("");
         }
-
-        // Get value for b[i]
-        printf("Enter value for the b%d: ", i + 1);
-        b[i] = getInput("");
+        if (checkConvergence(a, n, n))
+        {
+            break;
+        }
+        else
+        {
+            printf("Could not converge. Please enter different values.\n");
+        }
     }
-
-    // Show the values
     Show(a, b, n, n);
-
     // Free memory
     for (int i = 0; i < n; i++)
     {
@@ -137,4 +139,30 @@ void Show(float **aValues, const float *bValues, int rows, int columns)
         printf(" = %f", bValues[i]);
         printf("\n");
     }
+}
+int checkConvergence(float **aValues, int rows, int columns)
+{
+    int convergenceFlag = 1;
+
+    for (int row = 0; row < rows; row++)
+    {
+        float rowSum = 0.0;
+
+        // Calculate the sum of elements in the current row excluding the diagonal element
+        for (int col = 0; col < columns; col++)
+        {
+            if (col != row)
+            {
+                rowSum += aValues[row][col];
+            }
+        }
+
+        // Check if the diagonal element is less than or equal to the sum of other elements in the row
+        if (aValues[row][row] <= rowSum)
+        {
+            convergenceFlag = 0;
+            break;
+        }
+    }
+    return convergenceFlag;
 }
