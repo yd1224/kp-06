@@ -12,7 +12,12 @@ int main()
 {
     float **a;
     float *b;
+    float accuracy;
+    float *x0;
+    float *x;
     int n;
+    float max;
+
     while (1)
     {
         n = getInput("Enter the number of equations: ");
@@ -34,17 +39,16 @@ int main()
                 return 1;
             }
 
-            // Get values for a[i]
             for (int j = 0; j < n; j++)
             {
                 printf("Enter value for the a%d%d: ", i + 1, j + 1);
                 a[i][j] = getInput("");
             }
 
-            // Get value for b[i]
             printf("Enter value for the b%d: ", i + 1);
             b[i] = getInput("");
         }
+        // Check convergence
         if (checkConvergence(a, n, n))
         {
             break;
@@ -55,6 +59,55 @@ int main()
         }
     }
     Show(a, b, n, n);
+    // Getting accuracy
+    while (1)
+    {
+        accuracy = getInput("Please, enter the accuracy (0-1): ");
+        if (accuracy <= 0 || accuracy > 1)
+        {
+            printf("Error. Please, try again\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+    x0 = (float *)malloc(n * sizeof(float));
+    x = (float *)malloc(n * sizeof(float));
+    for (int i = 0; i < n; i++)
+        x0[i] = b[i] / a[i][i];
+    do
+    {
+        float max = 2 * accuracy;
+        for (int i = 0; i < n; i++)
+        {
+            float sum = 0.0;
+            for (int j = 0; j < n; j++)
+            {
+                if (j != i)
+                {
+                    sum += a[i][j] * x0[j];
+                }
+            }
+
+            x[i] = b[i] + sum;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            if (fabs(x[i] - x0[i]) > max)
+            {
+                max = fabs(x[i] - x0[i]);
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            x0[i] = x[i];
+        }
+    } while (max > accuracy);
+    for (int i = 0; i < n; i++)
+        printf("%f", x0[i]);
     // Free memory
     for (int i = 0; i < n; i++)
     {
@@ -132,9 +185,7 @@ void Show(float **aValues, const float *bValues, int rows, int columns)
         {
             printf("%fx", aValues[i][j]);
             if (j < columns - 1)
-            {
                 printf(" + ");
-            }
         }
         printf(" = %f", bValues[i]);
         printf("\n");
@@ -152,9 +203,7 @@ int checkConvergence(float **aValues, int rows, int columns)
         for (int col = 0; col < columns; col++)
         {
             if (col != row)
-            {
                 rowSum += aValues[row][col];
-            }
         }
 
         // Check if the diagonal element is less than or equal to the sum of other elements in the row
