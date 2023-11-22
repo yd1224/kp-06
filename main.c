@@ -6,8 +6,10 @@
 #include <stdbool.h>
 double getInput(const char *prompt);
 bool isScientificNotation(const char *input);
-void Show(float **aValues, const float *bValues, int rows, int columns);
+void show(float **aValues, float *bValues, int rows, int columns);
 int checkConvergence(float **aValues, int rows, int columns);
+void showResult(float *resultArr, int rows);
+void freeMemory(float **aValues, float *bValues, float *resultArr, float *arr, int rows);
 int main()
 {
     float **a;
@@ -16,7 +18,6 @@ int main()
     float *x0;
     float *x;
     int n;
-    float max;
 
     while (1)
     {
@@ -58,7 +59,7 @@ int main()
             printf("Could not converge. Please enter different values.\n");
         }
     }
-    Show(a, b, n, n);
+    show(a, b, n, n);
     // Getting accuracy
     while (1)
     {
@@ -76,9 +77,10 @@ int main()
     x = (float *)malloc(n * sizeof(float));
     for (int i = 0; i < n; i++)
         x0[i] = b[i] / a[i][i];
+    float max = 2 * accuracy;
     do
     {
-        float max = 2 * accuracy;
+
         for (int i = 0; i < n; i++)
         {
             float sum = 0.0;
@@ -90,9 +92,9 @@ int main()
                 }
             }
 
-            x[i] = b[i] + sum;
+            x[i] = (b[i] - sum) / (a[i][i]);
         }
-
+        max = fabs(x[0] - x0[0]);
         for (int i = 0; i < n; i++)
         {
             if (fabs(x[i] - x0[i]) > max)
@@ -106,15 +108,10 @@ int main()
             x0[i] = x[i];
         }
     } while (max > accuracy);
-    for (int i = 0; i < n; i++)
-        printf("%f", x0[i]);
-    // Free memory
-    for (int i = 0; i < n; i++)
-    {
-        free(a[i]);
-    }
-    free(a);
-    free(b);
+
+    showResult(x0, n);
+
+    freeMemory(a, b, x0, x, n);
 
     return 0;
 }
@@ -177,7 +174,7 @@ bool isScientificNotation(const char *input)
 
     return (eCount == 1) && (digitsBeforeE > 0) && (digitsAfterE > 0);
 }
-void Show(float **aValues, const float *bValues, int rows, int columns)
+void show(float **aValues, float *bValues, int rows, int columns)
 {
     for (int i = 0; i < rows; i++)
     {
@@ -214,4 +211,20 @@ int checkConvergence(float **aValues, int rows, int columns)
         }
     }
     return convergenceFlag;
+}
+void showResult(float *resultArr, int rows)
+{
+    for (int i = 0; i < rows; i++)
+        printf("x%d=%f\n", i + 1, resultArr[i]);
+}
+void freeMemory(float **aValues, float *bValues, float *resultArr, float *arr, int rows)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        free(aValues[i]);
+    }
+    free(aValues);
+    free(bValues);
+    free(resultArr);
+    free(arr);
 }
